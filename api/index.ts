@@ -1,4 +1,5 @@
 import express from "express";
+import { registerRoutes } from "../server/routes.js";
 
 const app = express();
 app.use(express.json({ limit: "10mb" }));
@@ -15,18 +16,7 @@ app.get("/api/debug", (_req, res) => {
   });
 });
 
-try {
-  const { registerRoutes } = await import("../server/routes");
-  registerRoutes(app);
-} catch (err: any) {
-  console.error("Failed to register routes:", err);
-  // If routes fail to load, add a fallback error handler
-  app.all("/api/*", (_req, res) => {
-    res.status(500).json({
-      error: "Server initialization failed",
-      message: err?.message || "Unknown error",
-    });
-  });
-}
+// registerRoutes returns an http.Server but we only need the Express app for Vercel
+registerRoutes(app);
 
 export default app;
