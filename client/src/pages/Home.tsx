@@ -5,6 +5,7 @@ import EmergencyBanner from "@/components/EmergencyBanner";
 import Hero from "@/components/Hero";
 import Specialists from "@/components/Specialists";
 import ServicesSection from "@/components/ServicesSection";
+import AboutSection from "@/components/AboutSection";
 import Footer from "@/components/Footer";
 
 export default function Home() {
@@ -38,6 +39,7 @@ export default function Home() {
         <Hero />
         <Specialists />
         <ServicesSection />
+        <AboutSection />
       </main>
       <Footer />
     </div>

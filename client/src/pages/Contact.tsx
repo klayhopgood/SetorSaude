@@ -90,7 +90,7 @@ export default function Contact() {
                     <p className="text-muted-foreground">Localidade Vales</p>
                     <p className="text-muted-foreground">8670-158 Aljezur, Portugal</p>
                     <a
-                      href="https://maps.google.com/maps?q=37.31867,-8.80341"
+                      href="https://maps.google.com/maps?q=Setor+Sa%C3%BAde+Aljezur"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 mt-2 text-sm text-brand-primary hover:text-brand-dark transition-colors font-medium"
@@ -138,10 +138,11 @@ export default function Contact() {
               {/* Google Maps embed */}
               <div className="rounded-xl overflow-hidden shadow-lg h-[500px]">
                 <iframe
-                  src="https://maps.google.com/maps?q=37.31867,-8.80341&z=15&output=embed"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3640.98745542789!2d-8.8364849!3d37.295552199999996!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd1b415066e6aaa7%3A0x2fdc29fdf515ab6b!2sSetorSa%C3%BAde!5e1!3m2!1sen!2sau!4v1772841128463!5m2!1sen!2sau"
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}
+                  allowFullScreen
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
                   title="Setor Saúde location map"

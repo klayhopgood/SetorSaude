@@ -15,7 +15,7 @@ const resources = {
       welcome: "Welcome to",
       subtitle: "Your Clinic and Parapharmacy",
       heroTagline: "Healthcare excellence in the heart of the Algarve",
-      bookNow: "Book Appointment",
+      bookNow: "Call to make an Appointment",
       learnMore: "Learn More",
 
       // Section titles
@@ -108,7 +108,7 @@ const resources = {
 
       // About page
       aboutTitle: "About Setor Saúde",
-      aboutSubtitle: "Modern healthcare in the heart of Aljezur",
+      aboutSubtitle: "Modern healthcare in the heart of Aljezur, Algarve",
       ourStory: "Our Story",
       facilities: "Our Facilities",
       facilitiesDesc:
@@ -144,7 +144,7 @@ const resources = {
       welcome: "Bem-vindo ao",
       subtitle: "A sua Clínica e Parafarmácia",
       heroTagline: "Excelência em saúde no coração do Algarve",
-      bookNow: "Marcar Consulta",
+      bookNow: "Ligue para marcar consulta",
       learnMore: "Saber Mais",
 
       // Section titles
@@ -236,8 +236,8 @@ const resources = {
       "massage therapy": "Massagem Terapêutica",
 
       // About page
-      aboutTitle: "Sobre o Setor Saúde",
-      aboutSubtitle: "Saúde moderna no coração de Aljezur",
+      aboutTitle: "Sobre Setor Saúde",
+      aboutSubtitle: "Saúde moderna no coração de Aljezur, Algarve",
       ourStory: "A Nossa História",
       facilities: "As Nossas Instalações",
       facilitiesDesc:
@@ -270,5 +270,13 @@ i18next.use(initReactI18next).init({
     escapeValue: false,
   },
 });
+
+// Ensure document lang attribute matches the default language
+if (typeof document !== "undefined") {
+  document.documentElement.lang = i18next.language || "pt";
+  i18next.on("languageChanged", (lng) => {
+    document.documentElement.lang = lng;
+  });
+}
 
 export default i18next;

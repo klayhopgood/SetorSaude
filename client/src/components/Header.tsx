@@ -41,7 +41,7 @@ export default function Header() {
     { label: t("home"), href: "/", type: "link" as const },
     { label: t("ourSpecialists"), action: () => scrollToSection("specialists"), type: "scroll" as const },
     { label: t("ourServices"), action: () => scrollToSection("services"), type: "scroll" as const },
-    { label: t("about"), href: "/about", type: "link" as const },
+    { label: t("about"), action: () => scrollToSection("about"), type: "scroll" as const },
     { label: t("contactNav"), href: "/contact", type: "link" as const },
   ];
 
