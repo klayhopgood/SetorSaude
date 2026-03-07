@@ -1,11 +1,11 @@
 import express from "express";
-import { registerRoutes } from "../server/routes.js";
+import { registerRoutes } from "../server/routes";
 
 const app = express();
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: false }));
 
-// Debug endpoint that doesn't depend on DB
+// Debug endpoint
 app.get("/api/debug", (_req, res) => {
   res.json({
     status: "ok",
