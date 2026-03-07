@@ -13,7 +13,7 @@ import {
   insertSpecialistScheduleSchema,
   insertServiceSchema,
   insertServiceScheduleSchema,
-} from "@shared/schema";
+} from "../shared/schema";
 
 // ── Admin auth middleware ─────────────────────────────────────────────
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "duarteisking";

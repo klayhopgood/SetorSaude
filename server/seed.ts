@@ -6,7 +6,7 @@ import {
   services,
   serviceSchedules,
   siteSettings,
-} from "@shared/schema";
+} from "../shared/schema";
 
 // ═══════════════════════════════════════════════════════════
 // SPECIALIST DATA (from Sheet2 + Sheet1)
