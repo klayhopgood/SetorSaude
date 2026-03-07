@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import Header from "@/components/Header";
 import EmergencyBanner from "@/components/EmergencyBanner";
 import Hero from "@/components/Hero";
+import WeeklyCalendar from "@/components/WeeklyCalendar";
 import Specialists from "@/components/Specialists";
 import ServicesSection from "@/components/ServicesSection";
 import AboutSection from "@/components/AboutSection";
@@ -37,6 +38,7 @@ export default function Home() {
       <Header />
       <main>
         <Hero />
+        <WeeklyCalendar />
         <Specialists />
         <ServicesSection />
         <AboutSection />
