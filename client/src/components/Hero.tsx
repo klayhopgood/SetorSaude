@@ -60,7 +60,7 @@ export default function Hero() {
         <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-brand-primary mb-3">
           {t("welcome")}
           <br />
-          <span className="text-brand-dark">Setor Saúde</span>
+          <span className="text-brand-dark" translate="no">Setor Saúde</span>
         </h1>
         <p className="text-lg md:text-xl text-brand-primary/80 font-medium mb-6">
           {t("subtitle")}

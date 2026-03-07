@@ -30,8 +30,10 @@ export default function Specialists() {
   const [expandedSchedules, setExpandedSchedules] = useState<Set<number>>(new Set());
   const [selectedSpecialties, setSelectedSpecialties] = useState<Set<string>>(new Set());
 
-  const { data: specialists = [], isLoading } = useQuery<SpecialistWithSchedules[]>({
+  const { data: specialists = [], isLoading, isError, error } = useQuery<SpecialistWithSchedules[]>({
     queryKey: ["/api/specialists"],
+    retry: 3,
+    retryDelay: 1000,
   });
 
   const toggleBio = (id: number) => {
@@ -111,6 +113,24 @@ export default function Specialists() {
               </Card>
             ))}
           </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (isError) {
+    console.error("Failed to load specialists:", error);
+    return (
+      <section id="specialists" className="py-16 bg-white">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            {t("ourSpecialists")}
+          </h2>
+          <p className="text-muted-foreground">
+            {i18n.language === "pt"
+              ? "Não foi possível carregar os especialistas. Por favor, tente novamente mais tarde."
+              : "Unable to load specialists. Please try again later."}
+          </p>
         </div>
       </section>
     );

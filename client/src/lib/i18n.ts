@@ -266,15 +266,20 @@ i18next.use(initReactI18next).init({
   resources,
   lng: "pt",
   fallbackLng: "en",
+  supportedLngs: ["pt", "en"],
+  nonExplicitSupportedLngs: false,
   interpolation: {
     escapeValue: false,
+  },
+  detection: {
+    order: [], // Disable all auto-detection — always use lng: "pt"
   },
 });
 
 // Ensure document lang attribute matches the default language
 if (typeof document !== "undefined") {
   document.documentElement.lang = i18next.language || "pt";
-  i18next.on("languageChanged", (lng) => {
+  i18next.on("languageChanged", (lng: string) => {
     document.documentElement.lang = lng;
   });
 }

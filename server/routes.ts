@@ -127,10 +127,16 @@ export function registerRoutes(app: Express): Server {
 
   // ── Auth check ─────────────────────────────────────────────────
   app.post("/api/admin/login", (req, res) => {
-    const { password } = req.body;
-    if (password === ADMIN_PASSWORD) {
+    const { password } = req.body || {};
+    if (!password) {
+      console.error("Admin login: no password provided in request body");
+      return res.status(400).json({ error: "Password required" });
+    }
+    // Trim whitespace to avoid copy-paste issues
+    if (password.trim() === ADMIN_PASSWORD) {
       res.json({ success: true });
     } else {
+      console.error("Admin login: incorrect password attempt");
       res.status(401).json({ error: "Invalid password" });
     }
   });

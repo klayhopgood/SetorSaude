@@ -15,7 +15,7 @@ export default function Footer() {
           <div className="flex items-start gap-3 mb-4">
             <MapPin className="w-5 h-5 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="font-medium">Setor Saúde</p>
+              <p className="font-medium" translate="no">Setor Saúde</p>
               <p className="text-white/80 text-sm">Localidade Vales</p>
               <p className="text-white/80 text-sm">8670-158 Aljezur, Portugal</p>
             </div>
@@ -130,7 +130,7 @@ export default function Footer() {
       <div className="border-t border-white/20">
         <div className="container mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-4 text-sm text-white/70">
           <div className="flex items-center gap-4">
-            <p>© {new Date().getFullYear()} Setor Saúde. {t("allRightsReserved")}.</p>
+            <p>© {new Date().getFullYear()} <span translate="no">Setor Saúde</span>. {t("allRightsReserved")}.</p>
             <span>•</span>
             <p>{t("license")}: 24805/2024</p>
             <span>•</span>

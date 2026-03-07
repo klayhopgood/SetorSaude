@@ -30,8 +30,10 @@ export default function ServicesSection() {
   const [expandedSchedules, setExpandedSchedules] = useState<Set<number>>(new Set());
   const [selectedServices, setSelectedServices] = useState<Set<string>>(new Set());
 
-  const { data: services = [], isLoading } = useQuery<ServiceWithSchedules[]>({
+  const { data: services = [], isLoading, isError, error } = useQuery<ServiceWithSchedules[]>({
     queryKey: ["/api/services"],
+    retry: 3,
+    retryDelay: 1000,
   });
 
   // Reset filters on language change
@@ -116,6 +118,24 @@ export default function ServicesSection() {
               </Card>
             ))}
           </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (isError) {
+    console.error("Failed to load services:", error);
+    return (
+      <section id="services" className="py-16 bg-muted/30">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            {t("ourServices")}
+          </h2>
+          <p className="text-muted-foreground">
+            {i18n.language === "pt"
+              ? "Não foi possível carregar os serviços. Por favor, tente novamente mais tarde."
+              : "Unable to load services. Please try again later."}
+          </p>
         </div>
       </section>
     );

@@ -15,7 +15,7 @@ function PageLoader() {
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="animate-pulse text-brand-primary text-xl font-semibold">
-        Setor Saúde
+        <span translate="no">Setor Saúde</span>
       </div>
     </div>
   );
