@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import {
   Plus,
   Pencil,
@@ -35,6 +36,8 @@ import {
   Settings,
   Briefcase,
   Lock,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import type {
   Specialist,
@@ -238,9 +241,15 @@ function SpecialistsTab() {
     availableText: "",
   });
 
+  // Fetch ALL specialists (including inactive) via admin endpoint
   const { data: specialists = [] } = useQuery<SpecialistWithSchedules[]>({
-    queryKey: ["/api/specialists"],
+    queryKey: ["/api/admin/specialists"],
   });
+
+  const invalidateAll = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/admin/specialists"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/specialists"] });
+  };
 
   const saveMutation = useMutation({
     mutationFn: async (data: typeof form) => {
@@ -250,7 +259,7 @@ function SpecialistsTab() {
       return apiRequest("POST", "/api/admin/specialists", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/specialists"] });
+      invalidateAll();
       toast({ title: editingId ? "Updated!" : "Created!" });
       resetForm();
     },
@@ -263,8 +272,22 @@ function SpecialistsTab() {
     mutationFn: (id: number) =>
       apiRequest("DELETE", `/api/admin/specialists/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/specialists"] });
+      invalidateAll();
       toast({ title: "Deleted!" });
+    },
+  });
+
+  const toggleActiveMutation = useMutation({
+    mutationFn: ({ id, isActive }: { id: number; isActive: boolean }) =>
+      apiRequest("PATCH", `/api/admin/specialists/${id}/toggle`, { isActive }),
+    onSuccess: (_data, variables) => {
+      invalidateAll();
+      toast({
+        title: variables.isActive ? "Specialist visible on site" : "Specialist hidden from site",
+      });
+    },
+    onError: () => {
+      toast({ title: "Error toggling visibility", variant: "destructive" });
     },
   });
 
@@ -272,7 +295,7 @@ function SpecialistsTab() {
     mutationFn: (data: { specialistId: number; dateType: string; dateValue: string | null; availableText: string }) =>
       apiRequest("POST", "/api/admin/specialist-schedules", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/specialists"] });
+      invalidateAll();
       setScheduleForm({ dateType: "weekdays", dateValue: "", availableText: "" });
       toast({ title: "Schedule added!" });
     },
@@ -282,7 +305,7 @@ function SpecialistsTab() {
     mutationFn: (id: number) =>
       apiRequest("DELETE", `/api/admin/specialist-schedules/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/specialists"] });
+      invalidateAll();
     },
   });
 
@@ -412,7 +435,7 @@ function SpecialistsTab() {
       {/* Specialists List */}
       <div className="space-y-4">
         {specialists.map((s) => (
-          <Card key={s.id}>
+          <Card key={s.id} className={!s.isActive ? "opacity-50 border-dashed" : ""}>
             <CardContent className="p-4">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-4">
@@ -420,7 +443,7 @@ function SpecialistsTab() {
                     <img
                       src={s.imageUrl}
                       alt={s.name}
-                      className="w-16 h-16 rounded-lg object-cover"
+                      className={`w-16 h-16 rounded-lg object-cover ${!s.isActive ? "grayscale" : ""}`}
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = "/images/logo1.svg";
                       }}
@@ -431,7 +454,14 @@ function SpecialistsTab() {
                     </div>
                   )}
                   <div>
-                    <h3 className="font-semibold">{s.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold">{s.name}</h3>
+                      {!s.isActive && (
+                        <span className="text-[10px] font-medium bg-muted text-muted-foreground px-1.5 py-0.5 rounded">
+                          HIDDEN
+                        </span>
+                      )}
+                    </div>
                     <p className="text-sm text-muted-foreground">
                       {s.specialtyEn} / {s.specialtyPt}
                     </p>
@@ -440,7 +470,22 @@ function SpecialistsTab() {
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-3">
+                  {/* Active toggle */}
+                  <div className="flex items-center gap-2">
+                    {s.isActive ? (
+                      <Eye className="w-4 h-4 text-green-600" />
+                    ) : (
+                      <EyeOff className="w-4 h-4 text-muted-foreground" />
+                    )}
+                    <Switch
+                      checked={s.isActive}
+                      onCheckedChange={(checked) =>
+                        toggleActiveMutation.mutate({ id: s.id, isActive: checked })
+                      }
+                      disabled={toggleActiveMutation.isPending}
+                    />
+                  </div>
                   <Button
                     variant="outline"
                     size="sm"
@@ -599,9 +644,15 @@ function ServicesTab() {
     availabilityText: "",
   });
 
+  // Fetch ALL services (including inactive) via admin endpoint
   const { data: services = [] } = useQuery<ServiceWithSchedules[]>({
-    queryKey: ["/api/services"],
+    queryKey: ["/api/admin/services"],
   });
+
+  const invalidateAll = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/admin/services"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/services"] });
+  };
 
   const saveMutation = useMutation({
     mutationFn: async (data: typeof form) => {
@@ -611,7 +662,7 @@ function ServicesTab() {
       return apiRequest("POST", "/api/admin/services", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/services"] });
+      invalidateAll();
       toast({ title: editingId ? "Updated!" : "Created!" });
       resetForm();
     },
@@ -624,8 +675,22 @@ function ServicesTab() {
     mutationFn: (id: number) =>
       apiRequest("DELETE", `/api/admin/services/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/services"] });
+      invalidateAll();
       toast({ title: "Deleted!" });
+    },
+  });
+
+  const toggleActiveMutation = useMutation({
+    mutationFn: ({ id, isActive }: { id: number; isActive: boolean }) =>
+      apiRequest("PATCH", `/api/admin/services/${id}/toggle`, { isActive }),
+    onSuccess: (_data, variables) => {
+      invalidateAll();
+      toast({
+        title: variables.isActive ? "Service visible on site" : "Service hidden from site",
+      });
+    },
+    onError: () => {
+      toast({ title: "Error toggling visibility", variant: "destructive" });
     },
   });
 
@@ -637,7 +702,7 @@ function ServicesTab() {
       availabilityText: string;
     }) => apiRequest("POST", "/api/admin/service-schedules", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/services"] });
+      invalidateAll();
       setScheduleForm({ dateType: "weekdays", dateValue: "", availabilityText: "" });
       toast({ title: "Schedule added!" });
     },
@@ -647,7 +712,7 @@ function ServicesTab() {
     mutationFn: (id: number) =>
       apiRequest("DELETE", `/api/admin/service-schedules/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/services"] });
+      invalidateAll();
     },
   });
 
@@ -785,7 +850,7 @@ function ServicesTab() {
       {/* Services List */}
       <div className="space-y-4">
         {services.map((s) => (
-          <Card key={s.id}>
+          <Card key={s.id} className={!s.isActive ? "opacity-50 border-dashed" : ""}>
             <CardContent className="p-4">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-4">
@@ -793,7 +858,7 @@ function ServicesTab() {
                     <img
                       src={s.imageUrl}
                       alt={s.providerName}
-                      className="w-16 h-16 rounded-lg object-cover"
+                      className={`w-16 h-16 rounded-lg object-cover ${!s.isActive ? "grayscale" : ""}`}
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = "/images/logo1.svg";
                       }}
@@ -804,7 +869,14 @@ function ServicesTab() {
                     </div>
                   )}
                   <div>
-                    <h3 className="font-semibold">{s.providerName}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold">{s.providerName}</h3>
+                      {!s.isActive && (
+                        <span className="text-[10px] font-medium bg-muted text-muted-foreground px-1.5 py-0.5 rounded">
+                          HIDDEN
+                        </span>
+                      )}
+                    </div>
                     <p className="text-sm text-muted-foreground">
                       {s.serviceEn} / {s.servicePt}
                     </p>
@@ -813,7 +885,22 @@ function ServicesTab() {
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-3">
+                  {/* Active toggle */}
+                  <div className="flex items-center gap-2">
+                    {s.isActive ? (
+                      <Eye className="w-4 h-4 text-green-600" />
+                    ) : (
+                      <EyeOff className="w-4 h-4 text-muted-foreground" />
+                    )}
+                    <Switch
+                      checked={s.isActive}
+                      onCheckedChange={(checked) =>
+                        toggleActiveMutation.mutate({ id: s.id, isActive: checked })
+                      }
+                      disabled={toggleActiveMutation.isPending}
+                    />
+                  </div>
                   <Button
                     variant="outline"
                     size="sm"

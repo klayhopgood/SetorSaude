@@ -31,12 +31,13 @@ export function registerRoutes(app: Express): Server {
   // PUBLIC API ROUTES
   // ══════════════════════════════════════════════════════════════════
 
-  // ── Specialists + their schedules ──────────────────────────────
+  // ── Specialists + their schedules (public: active only) ───────
   app.get("/api/specialists", async (_req, res) => {
     try {
       const allSpecialists = await db
         .select()
         .from(specialists)
+        .where(eq(specialists.isActive, true))
         .orderBy(specialists.sortOrder);
 
       const allSchedules = await db.select().from(specialistSchedules);
@@ -53,12 +54,13 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // ── Services + their schedules ─────────────────────────────────
+  // ── Services + their schedules (public: active only) ─────────
   app.get("/api/services", async (_req, res) => {
     try {
       const allServices = await db
         .select()
         .from(services)
+        .where(eq(services.isActive, true))
         .orderBy(services.sortOrder);
 
       const allSchedules = await db.select().from(serviceSchedules);
@@ -200,6 +202,45 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // ── Admin: list ALL specialists (including inactive) ─────────
+  app.get("/api/admin/specialists", adminAuth, async (_req, res) => {
+    try {
+      const allSpecialists = await db
+        .select()
+        .from(specialists)
+        .orderBy(specialists.sortOrder);
+
+      const allSchedules = await db.select().from(specialistSchedules);
+
+      const result = allSpecialists.map((s) => ({
+        ...s,
+        schedules: allSchedules.filter((sc) => sc.specialistId === s.id),
+      }));
+
+      res.json(result);
+    } catch (error) {
+      console.error("Failed to fetch all specialists:", error);
+      res.status(500).json({ error: "Failed to fetch specialists" });
+    }
+  });
+
+  // ── Toggle specialist active/inactive ────────────────────────
+  app.patch("/api/admin/specialists/:id/toggle", adminAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { isActive } = req.body;
+      const [result] = await db
+        .update(specialists)
+        .set({ isActive: !!isActive, updatedAt: new Date() })
+        .where(eq(specialists.id, id))
+        .returning();
+      res.json(result);
+    } catch (error) {
+      console.error("Failed to toggle specialist:", error);
+      res.status(500).json({ error: "Failed to toggle" });
+    }
+  });
+
   // ── CRUD Specialist Schedules ──────────────────────────────────
   app.post(
     "/api/admin/specialist-schedules",
@@ -272,6 +313,45 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Failed to delete service:", error);
       res.status(500).json({ error: "Failed to delete" });
+    }
+  });
+
+  // ── Admin: list ALL services (including inactive) ────────────
+  app.get("/api/admin/services", adminAuth, async (_req, res) => {
+    try {
+      const allServices = await db
+        .select()
+        .from(services)
+        .orderBy(services.sortOrder);
+
+      const allSchedules = await db.select().from(serviceSchedules);
+
+      const result = allServices.map((s) => ({
+        ...s,
+        schedules: allSchedules.filter((sc) => sc.serviceId === s.id),
+      }));
+
+      res.json(result);
+    } catch (error) {
+      console.error("Failed to fetch all services:", error);
+      res.status(500).json({ error: "Failed to fetch services" });
+    }
+  });
+
+  // ── Toggle service active/inactive ───────────────────────────
+  app.patch("/api/admin/services/:id/toggle", adminAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { isActive } = req.body;
+      const [result] = await db
+        .update(services)
+        .set({ isActive: !!isActive, updatedAt: new Date() })
+        .where(eq(services.id, id))
+        .returning();
+      res.json(result);
+    } catch (error) {
+      console.error("Failed to toggle service:", error);
+      res.status(500).json({ error: "Failed to toggle" });
     }
   });
 

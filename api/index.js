@@ -29,7 +29,7 @@ __export(schema_exports, {
   specialists: () => specialists,
   uploadedImages: () => uploadedImages
 });
-import { pgTable, text, serial, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 var specialists = pgTable("specialists", {
   id: serial("id").primaryKey(),
@@ -39,6 +39,7 @@ var specialists = pgTable("specialists", {
   bioEn: text("bio_en").default(""),
   bioPt: text("bio_pt").default(""),
   imageUrl: text("image_url"),
+  isActive: boolean("is_active").default(true).notNull(),
   sortOrder: integer("sort_order").default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
@@ -70,6 +71,7 @@ var services = pgTable("services", {
   bioEn: text("bio_en").default(""),
   bioPt: text("bio_pt").default(""),
   imageUrl: text("image_url"),
+  isActive: boolean("is_active").default(true).notNull(),
   sortOrder: integer("sort_order").default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
@@ -132,7 +134,7 @@ function adminAuth(req, res, next) {
 function registerRoutes(app2) {
   app2.get("/api/specialists", async (_req, res) => {
     try {
-      const allSpecialists = await db.select().from(specialists).orderBy(specialists.sortOrder);
+      const allSpecialists = await db.select().from(specialists).where(eq(specialists.isActive, true)).orderBy(specialists.sortOrder);
       const allSchedules = await db.select().from(specialistSchedules);
       const result = allSpecialists.map((s) => ({
         ...s,
@@ -146,7 +148,7 @@ function registerRoutes(app2) {
   });
   app2.get("/api/services", async (_req, res) => {
     try {
-      const allServices = await db.select().from(services).orderBy(services.sortOrder);
+      const allServices = await db.select().from(services).where(eq(services.isActive, true)).orderBy(services.sortOrder);
       const allSchedules = await db.select().from(serviceSchedules);
       const result = allServices.map((s) => ({
         ...s,
@@ -246,6 +248,31 @@ function registerRoutes(app2) {
       res.status(500).json({ error: "Failed to delete" });
     }
   });
+  app2.get("/api/admin/specialists", adminAuth, async (_req, res) => {
+    try {
+      const allSpecialists = await db.select().from(specialists).orderBy(specialists.sortOrder);
+      const allSchedules = await db.select().from(specialistSchedules);
+      const result = allSpecialists.map((s) => ({
+        ...s,
+        schedules: allSchedules.filter((sc) => sc.specialistId === s.id)
+      }));
+      res.json(result);
+    } catch (error) {
+      console.error("Failed to fetch all specialists:", error);
+      res.status(500).json({ error: "Failed to fetch specialists" });
+    }
+  });
+  app2.patch("/api/admin/specialists/:id/toggle", adminAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { isActive } = req.body;
+      const [result] = await db.update(specialists).set({ isActive: !!isActive, updatedAt: /* @__PURE__ */ new Date() }).where(eq(specialists.id, id)).returning();
+      res.json(result);
+    } catch (error) {
+      console.error("Failed to toggle specialist:", error);
+      res.status(500).json({ error: "Failed to toggle" });
+    }
+  });
   app2.post(
     "/api/admin/specialist-schedules",
     adminAuth,
@@ -303,6 +330,31 @@ function registerRoutes(app2) {
     } catch (error) {
       console.error("Failed to delete service:", error);
       res.status(500).json({ error: "Failed to delete" });
+    }
+  });
+  app2.get("/api/admin/services", adminAuth, async (_req, res) => {
+    try {
+      const allServices = await db.select().from(services).orderBy(services.sortOrder);
+      const allSchedules = await db.select().from(serviceSchedules);
+      const result = allServices.map((s) => ({
+        ...s,
+        schedules: allSchedules.filter((sc) => sc.serviceId === s.id)
+      }));
+      res.json(result);
+    } catch (error) {
+      console.error("Failed to fetch all services:", error);
+      res.status(500).json({ error: "Failed to fetch services" });
+    }
+  });
+  app2.patch("/api/admin/services/:id/toggle", adminAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { isActive } = req.body;
+      const [result] = await db.update(services).set({ isActive: !!isActive, updatedAt: /* @__PURE__ */ new Date() }).where(eq(services.id, id)).returning();
+      res.json(result);
+    } catch (error) {
+      console.error("Failed to toggle service:", error);
+      res.status(500).json({ error: "Failed to toggle" });
     }
   });
   app2.post("/api/admin/service-schedules", adminAuth, async (req, res) => {
