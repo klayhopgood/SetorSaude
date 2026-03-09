@@ -634,20 +634,22 @@ function SpecialistsTab() {
                       ))}
                     </div>
                   )}
-                  <Select
-                    value={scheduleForm.recurringType}
-                    onValueChange={(v: "one_off" | "ongoing") =>
-                      setScheduleForm({ ...scheduleForm, recurringType: v })
-                    }
-                  >
-                    <SelectTrigger className="w-28 h-8 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ongoing">Ongoing</SelectItem>
-                      <SelectItem value="one_off">One-off</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  {(["weekdays", "all_week"] as const).includes(scheduleForm.dateType) && (
+                    <Select
+                      value={scheduleForm.recurringType}
+                      onValueChange={(v: "one_off" | "ongoing") =>
+                        setScheduleForm({ ...scheduleForm, recurringType: v })
+                      }
+                    >
+                      <SelectTrigger className="w-28 h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ongoing">Ongoing</SelectItem>
+                        <SelectItem value="one_off">One-off</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
                   <Input
                     placeholder="e.g. 9:00 - 17:00"
                     className="w-40 h-8 text-xs"
@@ -672,12 +674,18 @@ function SpecialistsTab() {
                               : null
                             : null;
                       if (scheduleForm.dateType === "days_of_week" && !dateValue) return;
+                      const recurringType =
+                        scheduleForm.dateType === "specific"
+                          ? "one_off"
+                          : scheduleForm.dateType === "days_of_week"
+                            ? "ongoing"
+                            : scheduleForm.recurringType;
                       addScheduleMutation.mutate({
                         specialistId: s.id,
                         dateType: scheduleForm.dateType,
                         dateValue,
                         availableText: scheduleForm.availableText,
-                        recurringType: scheduleForm.recurringType,
+                        recurringType,
                       });
                     }}
                     disabled={
@@ -1121,20 +1129,22 @@ function ServicesTab() {
                       ))}
                     </div>
                   )}
-                  <Select
-                    value={scheduleForm.recurringType}
-                    onValueChange={(v: "one_off" | "ongoing") =>
-                      setScheduleForm({ ...scheduleForm, recurringType: v })
-                    }
-                  >
-                    <SelectTrigger className="w-28 h-8 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ongoing">Ongoing</SelectItem>
-                      <SelectItem value="one_off">One-off</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  {(["weekdays", "all_week"] as const).includes(scheduleForm.dateType) && (
+                    <Select
+                      value={scheduleForm.recurringType}
+                      onValueChange={(v: "one_off" | "ongoing") =>
+                        setScheduleForm({ ...scheduleForm, recurringType: v })
+                      }
+                    >
+                      <SelectTrigger className="w-28 h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ongoing">Ongoing</SelectItem>
+                        <SelectItem value="one_off">One-off</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
                   <Input
                     placeholder="e.g. 9:00 - 17:00"
                     className="w-40 h-8 text-xs"
@@ -1159,12 +1169,18 @@ function ServicesTab() {
                               : null
                             : null;
                       if (scheduleForm.dateType === "days_of_week" && !dateValue) return;
+                      const recurringType =
+                        scheduleForm.dateType === "specific"
+                          ? "one_off"
+                          : scheduleForm.dateType === "days_of_week"
+                            ? "ongoing"
+                            : scheduleForm.recurringType;
                       addScheduleMutation.mutate({
                         serviceId: s.id,
                         dateType: scheduleForm.dateType,
                         dateValue,
                         availabilityText: scheduleForm.availabilityText,
-                        recurringType: scheduleForm.recurringType,
+                        recurringType,
                       });
                     }}
                     disabled={
