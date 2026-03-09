@@ -73,6 +73,9 @@ export default function WeeklyCalendar() {
             matches = isWeekday(day);
           } else if (sched.dateType === "all_week") {
             matches = true;
+          } else if (sched.dateType === "days_of_week" && sched.dateValue) {
+            const dayNums = sched.dateValue.split(",").map((d) => parseInt(d.trim(), 10));
+            matches = dayNums.includes(day.getDay());
           }
 
           if (matches) {
@@ -98,6 +101,9 @@ export default function WeeklyCalendar() {
             matches = isWeekday(day);
           } else if (sched.dateType === "all_week") {
             matches = true;
+          } else if (sched.dateType === "days_of_week" && sched.dateValue) {
+            const dayNums = sched.dateValue.split(",").map((d) => parseInt(d.trim(), 10));
+            matches = dayNums.includes(day.getDay());
           }
 
           if (matches) {
@@ -147,6 +153,9 @@ export default function WeeklyCalendar() {
           matches = isWeekday(day);
         } else if (sched.dateType === "all_week") {
           matches = true;
+        } else if (sched.dateType === "days_of_week" && sched.dateValue) {
+          const dayNums = sched.dateValue.split(",").map((d) => parseInt(d.trim(), 10));
+          matches = dayNums.includes(day.getDay());
         }
         if (matches) {
           entries.push({
@@ -169,6 +178,9 @@ export default function WeeklyCalendar() {
           matches = isWeekday(day);
         } else if (sched.dateType === "all_week") {
           matches = true;
+        } else if (sched.dateType === "days_of_week" && sched.dateValue) {
+          const dayNums = sched.dateValue.split(",").map((d) => parseInt(d.trim(), 10));
+          matches = dayNums.includes(day.getDay());
         }
         if (matches) {
           entries.push({

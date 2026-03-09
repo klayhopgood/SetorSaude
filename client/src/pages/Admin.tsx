@@ -239,7 +239,23 @@ function SpecialistsTab() {
     dateType: "weekdays",
     dateValue: "",
     availableText: "",
+    recurringType: "ongoing" as "one_off" | "ongoing",
+    daysOfWeekSelected: [] as string[],
   });
+  const DAYS_OF_WEEK = [
+    { value: "1", label: "Mon" },
+    { value: "2", label: "Tue" },
+    { value: "3", label: "Wed" },
+    { value: "4", label: "Thu" },
+    { value: "5", label: "Fri" },
+    { value: "6", label: "Sat" },
+    { value: "0", label: "Sun" },
+  ] as const;
+  const formatDaysOfWeekLabel = (dateValue: string | null) => {
+    if (!dateValue) return "";
+    const labels: Record<string, string> = { "0": "Sun", "1": "Mon", "2": "Tue", "3": "Wed", "4": "Thu", "5": "Fri", "6": "Sat" };
+    return dateValue.split(",").map((d) => labels[d.trim()] || d).join(", ");
+  };
 
   // Fetch ALL specialists (including inactive) via admin endpoint
   const { data: specialists = [] } = useQuery<SpecialistWithSchedules[]>({
@@ -292,11 +308,16 @@ function SpecialistsTab() {
   });
 
   const addScheduleMutation = useMutation({
-    mutationFn: (data: { specialistId: number; dateType: string; dateValue: string | null; availableText: string }) =>
-      apiRequest("POST", "/api/admin/specialist-schedules", data),
+    mutationFn: (data: {
+      specialistId: number;
+      dateType: string;
+      dateValue: string | null;
+      availableText: string;
+      recurringType?: string;
+    }) => apiRequest("POST", "/api/admin/specialist-schedules", data),
     onSuccess: () => {
       invalidateAll();
-      setScheduleForm({ dateType: "weekdays", dateValue: "", availableText: "" });
+      setScheduleForm({ dateType: "weekdays", dateValue: "", availableText: "", recurringType: "ongoing", daysOfWeekSelected: [] });
       toast({ title: "Schedule added!" });
     },
   });
@@ -539,8 +560,15 @@ function SpecialistsTab() {
                           ? "Mon-Fri"
                           : sc.dateType === "all_week"
                             ? "All Week"
-                            : sc.dateValue}
+                            : sc.dateType === "days_of_week"
+                              ? formatDaysOfWeekLabel(sc.dateValue)
+                              : sc.dateValue}
                       </span>
+                      {sc.recurringType && (
+                        <span className="text-muted-foreground text-xs ml-1">
+                          ({sc.recurringType === "one_off" ? "One-off" : "Ongoing"})
+                        </span>
+                      )}
                       : {sc.availableText}
                     </span>
                     <Button
@@ -560,12 +588,13 @@ function SpecialistsTab() {
                       setScheduleForm({ ...scheduleForm, dateType: v })
                     }
                   >
-                    <SelectTrigger className="w-32 h-8 text-xs">
+                    <SelectTrigger className="w-36 h-8 text-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="weekdays">Mon-Fri</SelectItem>
                       <SelectItem value="all_week">All Week</SelectItem>
+                      <SelectItem value="days_of_week">Selected days</SelectItem>
                       <SelectItem value="specific">Specific Date</SelectItem>
                     </SelectContent>
                   </Select>
@@ -582,6 +611,43 @@ function SpecialistsTab() {
                       }
                     />
                   )}
+                  {scheduleForm.dateType === "days_of_week" && (
+                    <div className="flex flex-wrap gap-1 items-center">
+                      {DAYS_OF_WEEK.map((d) => (
+                        <label
+                          key={d.value}
+                          className="flex items-center gap-1 cursor-pointer text-xs border rounded px-2 py-1 hover:bg-muted/50"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={scheduleForm.daysOfWeekSelected.includes(d.value)}
+                            onChange={(e) => {
+                              const next = e.target.checked
+                                ? [...scheduleForm.daysOfWeekSelected, d.value]
+                                : scheduleForm.daysOfWeekSelected.filter((x) => x !== d.value);
+                              setScheduleForm({ ...scheduleForm, daysOfWeekSelected: next });
+                            }}
+                            className="rounded border-gray-300"
+                          />
+                          {d.label}
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                  <Select
+                    value={scheduleForm.recurringType}
+                    onValueChange={(v: "one_off" | "ongoing") =>
+                      setScheduleForm({ ...scheduleForm, recurringType: v })
+                    }
+                  >
+                    <SelectTrigger className="w-28 h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ongoing">Ongoing</SelectItem>
+                      <SelectItem value="one_off">One-off</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <Input
                     placeholder="e.g. 9:00 - 17:00"
                     className="w-40 h-8 text-xs"
@@ -596,18 +662,28 @@ function SpecialistsTab() {
                   <Button
                     size="sm"
                     className="h-8 text-xs bg-brand-primary hover:bg-brand-dark"
-                    onClick={() =>
+                    onClick={() => {
+                      const dateValue =
+                        scheduleForm.dateType === "specific"
+                          ? scheduleForm.dateValue
+                          : scheduleForm.dateType === "days_of_week"
+                            ? scheduleForm.daysOfWeekSelected.length > 0
+                              ? [...scheduleForm.daysOfWeekSelected].sort((a, b) => parseInt(a, 10) - parseInt(b, 10)).join(",")
+                              : null
+                            : null;
+                      if (scheduleForm.dateType === "days_of_week" && !dateValue) return;
                       addScheduleMutation.mutate({
                         specialistId: s.id,
                         dateType: scheduleForm.dateType,
-                        dateValue:
-                          scheduleForm.dateType === "specific"
-                            ? scheduleForm.dateValue
-                            : null,
+                        dateValue,
                         availableText: scheduleForm.availableText,
-                      })
+                        recurringType: scheduleForm.recurringType,
+                      });
+                    }}
+                    disabled={
+                      !scheduleForm.availableText ||
+                      (scheduleForm.dateType === "days_of_week" && scheduleForm.daysOfWeekSelected.length === 0)
                     }
-                    disabled={!scheduleForm.availableText}
                   >
                     <Plus className="w-3 h-3 mr-1" />
                     Add
@@ -642,7 +718,23 @@ function ServicesTab() {
     dateType: "weekdays",
     dateValue: "",
     availabilityText: "",
+    recurringType: "ongoing" as "one_off" | "ongoing",
+    daysOfWeekSelected: [] as string[],
   });
+  const DAYS_OF_WEEK = [
+    { value: "1", label: "Mon" },
+    { value: "2", label: "Tue" },
+    { value: "3", label: "Wed" },
+    { value: "4", label: "Thu" },
+    { value: "5", label: "Fri" },
+    { value: "6", label: "Sat" },
+    { value: "0", label: "Sun" },
+  ] as const;
+  const formatDaysOfWeekLabel = (dateValue: string | null) => {
+    if (!dateValue) return "";
+    const labels: Record<string, string> = { "0": "Sun", "1": "Mon", "2": "Tue", "3": "Wed", "4": "Thu", "5": "Fri", "6": "Sat" };
+    return dateValue.split(",").map((d) => labels[d.trim()] || d).join(", ");
+  };
 
   // Fetch ALL services (including inactive) via admin endpoint
   const { data: services = [] } = useQuery<ServiceWithSchedules[]>({
@@ -700,10 +792,11 @@ function ServicesTab() {
       dateType: string;
       dateValue: string | null;
       availabilityText: string;
+      recurringType?: string;
     }) => apiRequest("POST", "/api/admin/service-schedules", data),
     onSuccess: () => {
       invalidateAll();
-      setScheduleForm({ dateType: "weekdays", dateValue: "", availabilityText: "" });
+      setScheduleForm({ dateType: "weekdays", dateValue: "", availabilityText: "", recurringType: "ongoing", daysOfWeekSelected: [] });
       toast({ title: "Schedule added!" });
     },
   });
@@ -955,8 +1048,15 @@ function ServicesTab() {
                           ? "Mon-Fri"
                           : sc.dateType === "all_week"
                             ? "All Week"
-                            : sc.dateValue}
+                            : sc.dateType === "days_of_week"
+                              ? formatDaysOfWeekLabel(sc.dateValue)
+                              : sc.dateValue}
                       </span>
+                      {sc.recurringType && (
+                        <span className="text-muted-foreground text-xs ml-1">
+                          ({sc.recurringType === "one_off" ? "One-off" : "Ongoing"})
+                        </span>
+                      )}
                       : {sc.availabilityText}
                     </span>
                     <Button
@@ -975,12 +1075,13 @@ function ServicesTab() {
                       setScheduleForm({ ...scheduleForm, dateType: v })
                     }
                   >
-                    <SelectTrigger className="w-32 h-8 text-xs">
+                    <SelectTrigger className="w-36 h-8 text-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="weekdays">Mon-Fri</SelectItem>
                       <SelectItem value="all_week">All Week</SelectItem>
+                      <SelectItem value="days_of_week">Selected days</SelectItem>
                       <SelectItem value="specific">Specific Date</SelectItem>
                     </SelectContent>
                   </Select>
@@ -997,6 +1098,43 @@ function ServicesTab() {
                       }
                     />
                   )}
+                  {scheduleForm.dateType === "days_of_week" && (
+                    <div className="flex flex-wrap gap-1 items-center">
+                      {DAYS_OF_WEEK.map((d) => (
+                        <label
+                          key={d.value}
+                          className="flex items-center gap-1 cursor-pointer text-xs border rounded px-2 py-1 hover:bg-muted/50"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={scheduleForm.daysOfWeekSelected.includes(d.value)}
+                            onChange={(e) => {
+                              const next = e.target.checked
+                                ? [...scheduleForm.daysOfWeekSelected, d.value]
+                                : scheduleForm.daysOfWeekSelected.filter((x) => x !== d.value);
+                              setScheduleForm({ ...scheduleForm, daysOfWeekSelected: next });
+                            }}
+                            className="rounded border-gray-300"
+                          />
+                          {d.label}
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                  <Select
+                    value={scheduleForm.recurringType}
+                    onValueChange={(v: "one_off" | "ongoing") =>
+                      setScheduleForm({ ...scheduleForm, recurringType: v })
+                    }
+                  >
+                    <SelectTrigger className="w-28 h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ongoing">Ongoing</SelectItem>
+                      <SelectItem value="one_off">One-off</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <Input
                     placeholder="e.g. 9:00 - 17:00"
                     className="w-40 h-8 text-xs"
@@ -1011,18 +1149,28 @@ function ServicesTab() {
                   <Button
                     size="sm"
                     className="h-8 text-xs bg-brand-primary hover:bg-brand-dark"
-                    onClick={() =>
+                    onClick={() => {
+                      const dateValue =
+                        scheduleForm.dateType === "specific"
+                          ? scheduleForm.dateValue
+                          : scheduleForm.dateType === "days_of_week"
+                            ? scheduleForm.daysOfWeekSelected.length > 0
+                              ? [...scheduleForm.daysOfWeekSelected].sort((a, b) => parseInt(a, 10) - parseInt(b, 10)).join(",")
+                              : null
+                            : null;
+                      if (scheduleForm.dateType === "days_of_week" && !dateValue) return;
                       addScheduleMutation.mutate({
                         serviceId: s.id,
                         dateType: scheduleForm.dateType,
-                        dateValue:
-                          scheduleForm.dateType === "specific"
-                            ? scheduleForm.dateValue
-                            : null,
+                        dateValue,
                         availabilityText: scheduleForm.availabilityText,
-                      })
+                        recurringType: scheduleForm.recurringType,
+                      });
+                    }}
+                    disabled={
+                      !scheduleForm.availabilityText ||
+                      (scheduleForm.dateType === "days_of_week" && scheduleForm.daysOfWeekSelected.length === 0)
                     }
-                    disabled={!scheduleForm.availabilityText}
                   >
                     <Plus className="w-3 h-3 mr-1" />
                     Add

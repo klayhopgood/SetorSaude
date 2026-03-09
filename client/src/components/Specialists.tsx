@@ -75,11 +75,23 @@ export default function Specialists() {
       ),
   );
 
+  const formatDaysOfWeek = (dateValue: string | null) => {
+    if (!dateValue) return "";
+    const dayNames = dateValue.split(",").map((d) => {
+      const dayNum = parseInt(d.trim(), 10);
+      const date = new Date(2024, 0, 7 + dayNum);
+      return format(date, "EEEE", { locale });
+    });
+    return dayNames.join(", ");
+  };
+
   const formatAvailability = (schedule: SpecialistSchedule) => {
     if (schedule.dateType === "weekdays") {
       return { days: t("Monday - Friday"), time: schedule.availableText };
     } else if (schedule.dateType === "all_week") {
       return { days: t("Monday to Sunday"), time: schedule.availableText };
+    } else if (schedule.dateType === "days_of_week" && schedule.dateValue) {
+      return { days: formatDaysOfWeek(schedule.dateValue), time: schedule.availableText };
     } else if (schedule.dateValue) {
       try {
         return {

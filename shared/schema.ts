@@ -31,9 +31,10 @@ export const specialistSchedules = pgTable("specialist_schedules", {
   specialistId: integer("specialist_id")
     .notNull()
     .references(() => specialists.id, { onDelete: "cascade" }),
-  dateType: text("date_type").notNull(), // 'specific' | 'weekdays' | 'all_week'
-  dateValue: text("date_value"), // ISO date string for 'specific', null for others
+  dateType: text("date_type").notNull(), // 'specific' | 'weekdays' | 'all_week' | 'days_of_week'
+  dateValue: text("date_value"), // ISO date for 'specific'; comma-separated 0-6 (Sun-Sat) for 'days_of_week'; null for others
   availableText: text("available_text").notNull(), // e.g. "9:00 - 17:00"
+  recurringType: text("recurring_type").default("ongoing"), // 'one_off' | 'ongoing'
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -75,8 +76,9 @@ export const serviceSchedules = pgTable("service_schedules", {
     .notNull()
     .references(() => services.id, { onDelete: "cascade" }),
   dateType: text("date_type").notNull(),
-  dateValue: text("date_value"),
+  dateValue: text("date_value"), // same as specialist: ISO for 'specific', "0,1,2" for 'days_of_week'
   availabilityText: text("availability_text").notNull(),
+  recurringType: text("recurring_type").default("ongoing"), // 'one_off' | 'ongoing'
   createdAt: timestamp("created_at").defaultNow(),
 });
 
